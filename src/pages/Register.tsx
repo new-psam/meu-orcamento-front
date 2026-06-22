@@ -1,39 +1,37 @@
 import { useState } from "react";
-import { Button } from "../components/Button";
-import { Input } from "../components/Input";
-import { authService } from "../services/auth.service";
 import { Link, useNavigate } from "react-router-dom";
+import { authService } from "../services/auth.service";
+import { Input } from "../components/Input";
+import { Button } from "../components/Button";
 
-export function Login() {
-    const navigate = useNavigate()
-    // Estados para guardar o que o usuário digita
+export function Register() {
+    const [ name, setName ] = useState("");
     const [ email, setEmail ] = useState("");
     const [ password, setPassword ] = useState("");
 
-    // Estados para controlar o visual de carregamento e erros
-    const [isLoading, setIsLoading ] = useState(false);
+    const [ isLoading, setIsLoading ] = useState(false);
     const [ errorMessage, setErrorMessage ] = useState("");
 
-    // Função que roda quando o usuário clica em "Entrar"
+    // Hook do react-router-dom para mudarmos de tela via código
+    const navigate = useNavigate();
+
     const handleSubmit = async (e: React.SyntheticEvent<HTMLFormElement>) => {
-        e.preventDefault(); // Evita que a página recarregue
+        e.preventDefault();
         setErrorMessage("");
         setIsLoading(true);
 
         try {
-            // Chama a ponte de comunicação
-            const response = await authService.login({ email, password})
+            // Chama a função de cadastro que criamos no serviço
+            await authService.register({ name, email, password });
 
-            // Se deu certo,salvamos o token no bolso do navegador
-            localStorage.setItem("@MeuOrcamento:token", response.token);
+            alert("Conta criada com sucesso! 🎉 Faça login para continuar.");
 
-            alert("Login realizado com sucesso! 🎉");
-            // Depois vamos redirecionar o usuário para o Dashboard daqui
-            navigate("/dashboard");
+            // Se der tudo certo, manda o usuário de volta para a tela de Login
+            navigate("/");
 
         } catch (error) {
             console.error(error);
-            setErrorMessage("E-mail ou senha incorretos. Tente Novamente.");
+            setErrorMessage("Erro ao criar conta. Verifique os dados e tente novamente.")
         } finally {
             setIsLoading(false);
         }
@@ -43,10 +41,23 @@ export function Login() {
         <div className="flex min-h-screen items-center justify-center bg-gray-100 p-4">
             <div className="w-full max-w-md rounded-xl bg-white p-8 shadow-lg">
                 <h1 className="mb-6 text-center text-3xl font-bold text-gray-800">
-                    Meu Orçamento 🚀
+                    Criar Conta 🚀
                 </h1>
 
                 <form onSubmit={handleSubmit} className="space-y-4">
+                    <div>
+                        <label className="mb-1 block text-sm font-medium text-gray-700">
+                            Nome Completo
+                        </label>
+                        <Input
+                            type="text"
+                            placeholder="Seu nome"
+                            value={name}
+                            onChange={(e) => setName(e.target.value)}
+                            required
+                        />
+                    </div>
+
                     <div>
                         <label className="mb-1 block text-sm font-medium text-gray-700">
                             E-mail
@@ -63,17 +74,17 @@ export function Login() {
                     <div>
                         <label className="mb-1 block text-sm font-medium text-gray-700">
                             Senha
-                        </label >
+                        </label>
                         <Input
                             type="password"
-                            placeholder="senha-de-6-letras/numeros-noMinimo"
+                            placeholder="minimo-6-caracteres"
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
                             required
+                            minLength={6}
                         />
                     </div>
 
-                    {/* Exibe o erro em vermelho se algo der errado */}
                     {errorMessage && (
                         <p className="text-sm text-red-600">{errorMessage}</p>
                     )}
@@ -83,17 +94,18 @@ export function Login() {
                         className="w-full"
                         disabled={isLoading}
                     >
-                        {isLoading ? "Carregando..." : "Entrar"}
+                        {isLoading ? "Criando..." : "Cadastrar"}
                     </Button>
                 </form>
 
                 <p className="mt-6 text-center text-sm text-gray-600">
-                    Ainda não tem uma conta?{" "}
-                    <Link to="/cadastro" className="font-semibold text-blue-600 hover:underline">
-                        Cadastre-se
+                    Já tem uma conta?{" "}
+                    {/* o componente Link substitui a tag <a> para navegar sem recarregar a página */}
+                    <Link to="/" className="font-semibold text-blue-600 hover:underline">
+                        Faça Login
                     </Link>
                 </p>
             </div>
         </div>
-    );
+    )
 }
