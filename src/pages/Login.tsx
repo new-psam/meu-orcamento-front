@@ -3,6 +3,7 @@ import { Button } from "../components/Button";
 import { Input } from "../components/Input";
 import { authService } from "../services/auth.service";
 import { Link, useNavigate } from "react-router-dom";
+import { useAuth } from "../contexts/AuthContext"
 
 export function Login() {
     const navigate = useNavigate()
@@ -13,6 +14,8 @@ export function Login() {
     // Estados para controlar o visual de carregamento e erros
     const [isLoading, setIsLoading ] = useState(false);
     const [ errorMessage, setErrorMessage ] = useState("");
+
+    const { login } = useAuth();
 
     // Função que roda quando o usuário clica em "Entrar"
     const handleSubmit = async (e: React.SyntheticEvent<HTMLFormElement>) => {
@@ -25,7 +28,8 @@ export function Login() {
             const response = await authService.login({ email, password})
 
             // Se deu certo,salvamos o token no bolso do navegador
-            localStorage.setItem("@MeuOrcamento:token", response.token);
+            //localStorage.setItem("@MeuOrcamento:token", response.token);
+            login(response.token);
 
             alert("Login realizado com sucesso! 🎉");
             // Depois vamos redirecionar o usuário para o Dashboard daqui

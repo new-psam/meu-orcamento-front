@@ -1,14 +1,13 @@
-import { useNavigate } from "react-router-dom";
 import { Button } from "../components/Button";
+import { useAuth } from "../contexts/AuthContext";
 
 export function Dashboard() {
-    const navigate = useNavigate();
+    const { logout } = useAuth();
 
     const handleLogout = () => {
         // Remove o token da memória
-        localStorage.removeItem("@meuOrcamento:token");
-        // Manda de volta para o login
-        navigate("/");
+        logout();
+
     };
 
     return (
