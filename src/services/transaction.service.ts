@@ -24,8 +24,8 @@ export interface CreateTransactionData {
 export interface UpdateTransactionData extends Partial<CreateTransactionData> {}
 
 export interface TransactionSummary {
-    totalIncome: number;
-    totalExpense: number;
+    incomes: number;
+    expenses: number;
     balance: number;
 }
 

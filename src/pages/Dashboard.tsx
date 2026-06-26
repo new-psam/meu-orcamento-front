@@ -1,9 +1,56 @@
-import { LayoutDashboard, LogOut, Menu, Receipt } from "lucide-react";
-import { Button } from "../components/Button";
+import { AlertCircle, LayoutDashboard, LogOut, Menu, Receipt } from "lucide-react";
 import { useAuth } from "../contexts/AuthContext";
+import { useEffect, useState } from "react";
+import { transactionService, type TransactionSummary } from "../services/transaction.service";
+import { SummaryCard } from "../components/SummaryCard";
 
 export function Dashboard() {
     const { logout } = useAuth();
+
+    // 1. Criamos um estado para guardar o resumo. Começa zerado
+    const [summary, setSummary] = useState<TransactionSummary>({
+        balance: 0,
+        incomes: 0,
+        expenses: 0
+    });
+
+    // Estado para sabermos se esta carregando (mostra um texto de espera na tela)
+    const [isLoading, setIsLoading] = useState(true);
+    const [error, setError] = useState("");
+
+    // 2. O useEffect dispara assim que a tela abre
+    useEffect(() => {
+        // A variável 'mounted' evita o Memory Leak caso o usuário saia da tela rápido de mais
+        let mounted = true;
+
+        async function loadSummary() {
+            try {
+                const data = await transactionService.getSummary();
+                if (mounted) {
+                    setSummary(data);
+                    setError(""); // Limpa qualquer erro anterior
+                }
+                
+            } catch (error) {
+                console.error("Erro ao buscar o resumo financeiro:", error);
+                if (mounted) {
+                    setError("Não foi possível carregar o resumo financeiro.Tendte novamente mais tarde");
+                }
+            }finally{
+                if (mounted) {
+                    setIsLoading(false) // avisa que terminou de carregar
+                }
+            }
+        }
+
+        loadSummary();
+
+        // Função de limpeza do useEffect: roda quando o componente é destruido
+        return () => {
+            mounted = false
+        }
+    }, []);  // Essa array vazia [] means "rode apenas uma vez quando abrir a tela"
+
 
     return (
         <div className="flex min-h-screen flex-col bg-gray-50 md:flex-row">
@@ -58,22 +105,38 @@ export function Dashboard() {
                     <p className="text-gray-600">Acompanhe suas finanças deste mês.</p>
                 </header>
 
+                {/* Exibição amigável de erro, caso o servidor falhe*/}
+                {error && (
+                    <div className="mb-6 flex items-center gap-2 rounded-lg bg-red-50 p-4 text-red-600 border border-red-200">
+                        <AlertCircle size={20} />
+                        <p>{error}</p>
+                    </div>
+                )}
+
                 {/* Grid dos Cards de Resumo*/}
                 <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                    <div className="bg-white rounded-xl border p-6 shadow-sm">
-                        <h3 className="text-sm font-medium text-gray-500">Saldo Atual</h3>
-                        <p className="mt-2 text-3xl font-bold text-gray-900">R$ 0,00</p>
-                    </div>
 
-                    <div className="bg-white rounded-xl border p-6 shadow-sm">
-                        <h3 className="text-sm font-medium text-gray-500">Receitas</h3>
-                        <p className="mt-2 text-3xl font-bold text-gray-900">R$ 0,00</p>
-                    </div>
+                    <SummaryCard 
+                        title="Saldo Atual"
+                        amount={summary.balance}
+                        type="balance"
+                        isLoading={isLoading}
+                    />
 
-                    <div className="bg-white rounded-xl border p-6 shadow-sm">
-                        <h3 className="text-sm font-medium text-gray-500">Despesas</h3>
-                        <p className="mt-2 text-3xl font-bold text-gray-900">R$ 0,00</p>
-                    </div>
+                    <SummaryCard 
+                        title="Receitas"
+                        amount={summary.incomes}
+                        type="income"
+                        isLoading={isLoading}
+                    />
+
+                    <SummaryCard 
+                        title="Despesas"
+                        amount={summary.expenses}
+                        type="expense"
+                        isLoading={isLoading}
+                    />
+
                 </div>
             </main>
         </div>
