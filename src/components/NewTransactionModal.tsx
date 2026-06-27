@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { transactionService } from "../services/transaction.service";
-import { X } from "lucide-react";
 import { Input } from "./Input";
 import { Button } from "./Button";
+import { getTodayString } from "../utils/dateUtils";
 
 interface NewTransactionModalProps {
     isOpen: boolean;
@@ -16,14 +16,37 @@ export function NewTransactionModal({isOpen, onClose, onSuccess}: NewTransaction
     const [amount, setAmount] = useState("");
     const [type, setType] = useState<"INCOME" | "EXPENSE">("EXPENSE");
     const [date, setDate] = useState("");
+    const [status, setStatus] = useState<"PAID" | "PENDING">("PAID");
 
     const [isLoading, setIsLoading] = useState(false);
 
     // Se o modal não estiver aberto, o React não renderiza nada
     if (!isOpen) return null;
 
+    // "Smart Default"
+    const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const selectedDateStr = e.target.value; // Chega no formato YYYY-MM-DD
+        setDate(selectedDateStr);
+
+        if (!selectedDateStr) return;
+
+        const todayStr = getTodayString();
+    
+        // Comparamos as strings (ex: '2026-07-01' > '2026-06-27')
+        if (selectedDateStr > todayStr) {
+            setStatus("PENDING");
+        }else {
+            setStatus("PAID");
+        }
+
+    };
+
+
     const handleSubmit = async (e: React.SyntheticEvent<HTMLFormElement>) => {
         e.preventDefault();
+
+        if (!date) return;
+
         setIsLoading(true);
 
         try {
@@ -35,7 +58,8 @@ export function NewTransactionModal({isOpen, onClose, onSuccess}: NewTransaction
                 description,
                 amount: Number(amount),
                 type,
-                date: dateISO
+                date: dateISO,
+                status,
             });
 
             // Limpa os campos após salvar
@@ -43,9 +67,10 @@ export function NewTransactionModal({isOpen, onClose, onSuccess}: NewTransaction
             setAmount("");
             setType("EXPENSE");
             setDate("");
+            setStatus("PAID");
 
-            onSuccess(); // Avisa o Dashboard para buscar os novos totais
             onClose(); // Fecha a janelinha
+            onSuccess(); // Avisa o Dashboard para buscar os novos totais
         } catch (error) {
             console.error(error);
             alert("Erro ao criar a transação. Verifique os dados.");
@@ -61,6 +86,7 @@ export function NewTransactionModal({isOpen, onClose, onSuccess}: NewTransaction
                 {/* Botão de fechar (x) no centro superior direito*/}
                 <button
                     onClick={onClose}
+                    disabled={isLoading}
                     className="absolute right-4 top-4 text-gray-500 hover:text-gray-800"
                 >
                     <X size={24} />
@@ -76,6 +102,7 @@ export function NewTransactionModal({isOpen, onClose, onSuccess}: NewTransaction
                             placeholder="Ex: Supermercado"
                             value={description}
                             onChange={(e)=> setDescription(e.target.value)}
+                            disabled={isLoading}
                             required
                         />
                     </div>
@@ -84,9 +111,11 @@ export function NewTransactionModal({isOpen, onClose, onSuccess}: NewTransaction
                         <label className="mb-1 block text-sm font-medium text-gray-700">Valor</label>
                         <Input
                             type="number"
-                            placeholder="0.01"
+                            step="0.01"
+                            placeholder="0.00"
                             value={amount}
                             onChange={(e)=> setAmount(e.target.value)}
+                            disabled={isLoading}
                             required
                         />
                     </div>
@@ -98,6 +127,7 @@ export function NewTransactionModal({isOpen, onClose, onSuccess}: NewTransaction
                             <select
                                 value={type}
                                 onChange={(e)=> setType(e.target.value as "INCOME" | "EXPENSE")}
+                                disabled={isLoading}
                                 className="flex h-11 w-full rounded-md border border-gray-300 bg-transparent px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-600 focus-border-transparent"
                             >
                                 <option value="EXPENSE">Despesa</option>
@@ -110,10 +140,25 @@ export function NewTransactionModal({isOpen, onClose, onSuccess}: NewTransaction
                             <Input
                                 type="date"
                                 value={date}
-                                onChange={(e)=> setDate(e.target.value)}
+                                onChange={handleDateChange}
+                                disabled={isLoading}
                                 required
                             />
                         </div>
+                    </div>
+
+                    <div>
+                        <label className="mb-1 block text-sm font-medium text-gray-700">Situação</label>
+                        
+                        <select
+                            value={status}
+                            onChange={(e)=> setStatus(e.target.value as "PAID" | "PENDING")}
+                            disabled={isLoading}
+                            className="flex h-11 w-full rounded-md border border-gray-300 bg-transparent px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-600 focus-border-transparent"
+                        >
+                            <option value="PAID">Realizado (Pago/Recebido)</option>
+                            <option value="PENDING">Previsão (Pendente)</option>
+                        </select>
                     </div>
 
                     <Button type="submit" className="w-full mt-2" disabled={isLoading}>

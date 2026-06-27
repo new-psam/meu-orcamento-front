@@ -1,19 +1,22 @@
 import { AlertCircle, LayoutDashboard, LogOut, Menu, Plus, Receipt } from "lucide-react";
 import { useAuth } from "../contexts/AuthContext";
-import { useCallback, useEffect, useState } from "react";
-import { transactionService, type TransactionSummary } from "../services/transaction.service";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { type Transaction, transactionService, type TransactionSummary } from "../services/transaction.service";
 import { SummaryCard } from "../components/SummaryCard";
 import { NewTransactionModal } from "../components/NewTransactionModal";
+import { TransactionTable } from "../components/TransactionTable";
+
+type FilterType = "ALL" | "PAID" | "PENDING"
 
 export function Dashboard() {
     const { logout } = useAuth();
 
-    // 1. Criamos um estado para guardar o resumo. Começa zerado
-    const [summary, setSummary] = useState<TransactionSummary>({
-        balance: 0,
-        incomes: 0,
-        expenses: 0
-    });
+    // em vez de guardar o resumo, agora guardamos a lista completa de transações
+    const [transactions, setTransactions] = useState<Transaction[]>([]);
+
+    // estado para controlar qual filtro esta ativo
+    const [filter, setFilter] = useState<FilterType>("ALL");
+    const [meta, setMeta] = useState({page: 1, lastPage: 1 , total: 0});
 
     // Estado para sabermos se esta carregando (mostra um texto de espera na tela)
     const [isLoading, setIsLoading] = useState(true);
@@ -22,16 +25,19 @@ export function Dashboard() {
     // Estado que controla se o modal esta visível ou não
     const [isModalOpen, setIsModalOpen] = useState(false);
 
-    const loadSummary = useCallback(async ()=> {
+    const loadData = useCallback(async ()=> {
         try {
             setIsLoading(true);
-            const data = await transactionService.getSummary();
-            setSummary(data);
+            const response = await transactionService.getAll();
+            //Aqui a grande sacada: pegamos apenas a array de transações do objeto
+            setTransactions(response.data);
+            // E guardamos as informações de paginação para usarmos no rodapé
+            setMeta(response.meta);
             setError(""); // Limpa qualquer erro anterior
 
         } catch (error) {
-            console.error("Erro ao buscar o resumo financeiro:", error);
-            setError("Não foi possível carregar o resumo financeiro.Tendte novamente mais tarde");
+            console.error("Erro ao buscar as transações:", error);
+            setError("Não foi possível carregar os dados.Tente novamente mais tarde");
  
         }finally{
             setIsLoading(false) // avisa que terminou de carregar
@@ -41,9 +47,35 @@ export function Dashboard() {
 
     // 2. O useEffect dispara assim que a tela abre
     useEffect(() => {
-         loadSummary();
+         loadData();
 
-    }, [loadSummary]);  // Essa array vazia [] means "rode apenas uma vez quando abrir a tela"
+    }, [loadData]);  // Essa array vazia [] means "rode apenas uma vez quando abrir a tela"
+
+    // O React recalcula isso na hora que você clica num botão de filtro
+    const filteredTransactions = useMemo(()=> {
+        // 1. DEFESA: Se transactions não for um array válido (ex: undefined ou objeto da paginação), usamos um array vazio []
+        const safeTransactions = Array.isArray(transactions) ? transactions : [];
+
+        if (filter === "ALL") return safeTransactions;
+        return safeTransactions.filter(t => t.status === filter);
+    }, [transactions, filter]);
+
+    // O Resumo é calculado com base na lista filtrada 
+    const summary = useMemo(()=> {
+        return filteredTransactions.reduce(
+            (acc: TransactionSummary, transaction) => {
+                const amount = Number(transaction.amount) || 0;
+                if (transaction.type === "INCOME") {
+                    acc.incomes += amount;
+                } else {
+                    acc.expenses += amount;
+                }
+                acc.balance = acc.incomes - acc.expenses
+                return acc;
+            },
+            {incomes: 0, expenses: 0, balance: 0}
+        );
+    }, [filteredTransactions]);
 
 
     return (
@@ -53,7 +85,7 @@ export function Dashboard() {
             <NewTransactionModal
                 isOpen={isModalOpen}
                 onClose={() => setIsModalOpen(false)}
-                onSuccess={loadSummary} // Quando salvar, ele chama o loadSumary novamente!
+                onSuccess={loadData} // Quando salvar, ele chama o loadSumary novamente!
             />
 
             {/* ------------------- Barra Lateral (Desktop) -------------------------- */}
@@ -131,7 +163,7 @@ export function Dashboard() {
                 <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
 
                     <SummaryCard 
-                        title="Saldo Atual"
+                        title={filter === "PENDING" ? "Saldo Projetado" : "Saldo Atual"}
                         amount={summary.balance}
                         type="balance"
                         isLoading={isLoading}
@@ -152,6 +184,35 @@ export function Dashboard() {
                     />
 
                 </div>
+
+                {/* Botões de filtro */}
+                <div className="mt-12 flex gap-2 border-b pb-4">
+                    <button
+                        onClick={() => setFilter("ALL")}
+                        className={`rounded-lg px-4 py-2 text-sm font-medium transition-colors ${filter === "ALL" ? "bg-gray-900 text-white" : "bg-white text-gray-600 hover:bg-gray-100 border"}`}
+                    >
+                        Visão Geral
+                    </button>
+                    <button
+                        onClick={() => setFilter("PAID")}
+                        className={`rounded-lg px-4 py-2 text-sm font-medium transition-colors ${filter === "PAID" ? "bg-green-600 text-white" : "bg-white text-gray-600 hover:bg-gray-100 border"}`}
+                    >
+                        Realizado
+                    </button>
+                    <button
+                        onClick={() => setFilter("PENDING")}
+                        className={`rounded-lg px-4 py-2 text-sm font-medium transition-colors ${filter === "PENDING" ? "bg-yellow-500 text-white" : "bg-white text-gray-600 hover:bg-gray-100 border"}`}
+                    >
+                        Previsões
+                    </button>
+                </div>
+
+                {/* A nossa tabela entra aqui*/}
+                <TransactionTable
+                    transactions={filteredTransactions}
+                    isLoading={isLoading}
+                />
+
             </main>
         </div>
     );

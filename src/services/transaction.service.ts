@@ -1,6 +1,6 @@
 import { api } from "./api";
 
-// Definimos o formato exato que uma transação temno nosso sistema
+// Definimos o formato exato que uma transação tem no nosso sistema
 export interface Transaction {
     id: string;
     description: string;
@@ -29,9 +29,30 @@ export interface TransactionSummary {
     balance: number;
 }
 
+// interface para os filtros opcionais da lista
+export interface GetTransactionsParams {
+    month?: number;
+    year?: number;
+    page?: number;
+    limit?: number;
+    categoryId?: string;
+}
+
+// O formato que o backend devolve
+export interface PaginatedTransactions {
+    data: Transaction[];
+    meta: {
+        total: number;
+        page: number;
+        limit: number;
+        lastPage: number;
+    }
+}
+
 export const transactionService = {
-    async getAll(): Promise<Transaction[]> {
-        const response = await api.get<Transaction[]>("/transactions");
+    async getAll(params?: GetTransactionsParams): Promise<PaginatedTransactions> {
+        // O axios automaticamente transforma esse objeto { params } na string da URL (?month=6&page=1...)
+        const response = await api.get<PaginatedTransactions>("/transactions", { params });
         return response.data;
     },
 
