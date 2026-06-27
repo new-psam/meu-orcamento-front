@@ -1,8 +1,9 @@
-import { AlertCircle, LayoutDashboard, LogOut, Menu, Receipt } from "lucide-react";
+import { AlertCircle, LayoutDashboard, LogOut, Menu, Plus, Receipt } from "lucide-react";
 import { useAuth } from "../contexts/AuthContext";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { transactionService, type TransactionSummary } from "../services/transaction.service";
 import { SummaryCard } from "../components/SummaryCard";
+import { NewTransactionModal } from "../components/NewTransactionModal";
 
 export function Dashboard() {
     const { logout } = useAuth();
@@ -18,42 +19,43 @@ export function Dashboard() {
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState("");
 
+    // Estado que controla se o modal esta visível ou não
+    const [isModalOpen, setIsModalOpen] = useState(false);
+
+    const loadSummary = useCallback(async ()=> {
+        try {
+            setIsLoading(true);
+            const data = await transactionService.getSummary();
+            setSummary(data);
+            setError(""); // Limpa qualquer erro anterior
+
+        } catch (error) {
+            console.error("Erro ao buscar o resumo financeiro:", error);
+            setError("Não foi possível carregar o resumo financeiro.Tendte novamente mais tarde");
+ 
+        }finally{
+            setIsLoading(false) // avisa que terminou de carregar
+        }
+    }, []);
+
+
     // 2. O useEffect dispara assim que a tela abre
     useEffect(() => {
-        // A variável 'mounted' evita o Memory Leak caso o usuário saia da tela rápido de mais
-        let mounted = true;
+         loadSummary();
 
-        async function loadSummary() {
-            try {
-                const data = await transactionService.getSummary();
-                if (mounted) {
-                    setSummary(data);
-                    setError(""); // Limpa qualquer erro anterior
-                }
-                
-            } catch (error) {
-                console.error("Erro ao buscar o resumo financeiro:", error);
-                if (mounted) {
-                    setError("Não foi possível carregar o resumo financeiro.Tendte novamente mais tarde");
-                }
-            }finally{
-                if (mounted) {
-                    setIsLoading(false) // avisa que terminou de carregar
-                }
-            }
-        }
-
-        loadSummary();
-
-        // Função de limpeza do useEffect: roda quando o componente é destruido
-        return () => {
-            mounted = false
-        }
-    }, []);  // Essa array vazia [] means "rode apenas uma vez quando abrir a tela"
+    }, [loadSummary]);  // Essa array vazia [] means "rode apenas uma vez quando abrir a tela"
 
 
     return (
         <div className="flex min-h-screen flex-col bg-gray-50 md:flex-row">
+
+            {/* O Modal invisível fica esperando o comando para aparecer*/}
+            <NewTransactionModal
+                isOpen={isModalOpen}
+                onClose={() => setIsModalOpen(false)}
+                onSuccess={loadSummary} // Quando salvar, ele chama o loadSumary novamente!
+            />
+
             {/* ------------------- Barra Lateral (Desktop) -------------------------- */}
             <aside className="hidden w-64 flex-col border-r bg-white px-4 py-6 md:flex">
                 <div className="mb-8 flex items-center gap-2 px-2">
@@ -100,9 +102,21 @@ export function Dashboard() {
 
             {/* ---------------------------- ÁREA DE CONTEÚDO PRINCIPAL --------------------------*/}
             <main className="flex-1 p-6 md:p-8">
-                <header className="mb-8">
-                    <h1 className="text-2xl font-bold text-gray-800">Visão Geral</h1>
-                    <p className="text-gray-600">Acompanhe suas finanças deste mês.</p>
+                {/* Ajustamos o para acomodar o botão "Nova Transação"*/}
+                <header className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                    <div>
+                        <h1 className="text-2xl font-bold text-gray-800">Visão Geral</h1>
+                        <p className="text-gray-600">Acompanhe suas finanças deste mês.</p>
+                    </div>
+
+                    {/* Botão que aciona oestado para abrir o modal */}
+                    <button
+                        onClick={() => setIsModalOpen(true)}
+                        className="flex items-center justify-center gap-2 rounded-lg bg-blue-600 px-4 py-2 font-medium text-white transition-colors hover:bg-blue-700"
+                    >
+                        <Plus size={20} />
+                        Nova Transação
+                    </button>
                 </header>
 
                 {/* Exibição amigável de erro, caso o servidor falhe*/}
