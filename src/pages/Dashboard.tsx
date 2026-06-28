@@ -1,82 +1,35 @@
 import { AlertCircle, LayoutDashboard, LogOut, Menu, Plus, Receipt } from "lucide-react";
 import { useAuth } from "../contexts/AuthContext";
-import { useCallback, useEffect, useMemo, useState } from "react";
-import { type Transaction, transactionService, type TransactionSummary } from "../services/transaction.service";
+import { useState } from "react";
 import { SummaryCard } from "../components/SummaryCard";
 import { NewTransactionModal } from "../components/NewTransactionModal";
 import { TransactionTable } from "../components/TransactionTable";
-
-type FilterType = "ALL" | "PAID" | "PENDING"
+import { useTransactions } from "../hooks/useTransactions";
+import { Pagination } from "../components/Pagination";
+import { MonthSelector } from "../components/MonthSelector";
 
 export function Dashboard() {
     const { logout } = useAuth();
 
-    // em vez de guardar o resumo, agora guardamos a lista completa de transações
-    const [transactions, setTransactions] = useState<Transaction[]>([]);
-
-    // estado para controlar qual filtro esta ativo
-    const [filter, setFilter] = useState<FilterType>("ALL");
-    const [meta, setMeta] = useState({page: 1, lastPage: 1 , total: 0});
-
-    // Estado para sabermos se esta carregando (mostra um texto de espera na tela)
-    const [isLoading, setIsLoading] = useState(true);
-    const [error, setError] = useState("");
-
-    // Estado que controla se o modal esta visível ou não
+    // O modal controla a UI local, fica no componente
     const [isModalOpen, setIsModalOpen] = useState(false);
 
-    const loadData = useCallback(async ()=> {
-        try {
-            setIsLoading(true);
-            const response = await transactionService.getAll();
-            //Aqui a grande sacada: pegamos apenas a array de transações do objeto
-            setTransactions(response.data);
-            // E guardamos as informações de paginação para usarmos no rodapé
-            setMeta(response.meta);
-            setError(""); // Limpa qualquer erro anterior
-
-        } catch (error) {
-            console.error("Erro ao buscar as transações:", error);
-            setError("Não foi possível carregar os dados.Tente novamente mais tarde");
- 
-        }finally{
-            setIsLoading(false) // avisa que terminou de carregar
-        }
-    }, []);
-
-
-    // 2. O useEffect dispara assim que a tela abre
-    useEffect(() => {
-         loadData();
-
-    }, [loadData]);  // Essa array vazia [] means "rode apenas uma vez quando abrir a tela"
-
-    // O React recalcula isso na hora que você clica num botão de filtro
-    const filteredTransactions = useMemo(()=> {
-        // 1. DEFESA: Se transactions não for um array válido (ex: undefined ou objeto da paginação), usamos um array vazio []
-        const safeTransactions = Array.isArray(transactions) ? transactions : [];
-
-        if (filter === "ALL") return safeTransactions;
-        return safeTransactions.filter(t => t.status === filter);
-    }, [transactions, filter]);
-
-    // O Resumo é calculado com base na lista filtrada 
-    const summary = useMemo(()=> {
-        return filteredTransactions.reduce(
-            (acc: TransactionSummary, transaction) => {
-                const amount = Number(transaction.amount) || 0;
-                if (transaction.type === "INCOME") {
-                    acc.incomes += amount;
-                } else {
-                    acc.expenses += amount;
-                }
-                acc.balance = acc.incomes - acc.expenses
-                return acc;
-            },
-            {incomes: 0, expenses: 0, balance: 0}
-        );
-    }, [filteredTransactions]);
-
+    //mágica do hook: extraimos apenas o que o JSX precisa desenhar
+    const {
+        transactions,
+        summary,
+        filter,
+        setFilter,
+        isLoading,
+        error,
+        meta,
+        handlePageChange,
+        loadData,
+        handleNextMonth,
+        currentMonth,
+        currentYear,
+        handlePreviousMonth
+    } = useTransactions();
 
     return (
         <div className="flex min-h-screen flex-col bg-gray-50 md:flex-row">
@@ -159,6 +112,14 @@ export function Dashboard() {
                     </div>
                 )}
 
+                {/* Filtro de Mês e ano */}
+                <MonthSelector
+                    month={currentMonth}
+                    year={currentYear}
+                    onPrevious={handlePreviousMonth}
+                    onNext={handleNextMonth}
+                />
+
                 {/* Grid dos Cards de Resumo*/}
                 <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
 
@@ -209,10 +170,18 @@ export function Dashboard() {
 
                 {/* A nossa tabela entra aqui*/}
                 <TransactionTable
-                    transactions={filteredTransactions}
+                    transactions={transactions}
                     isLoading={isLoading}
                 />
 
+                {/* componente da paginação aqui*/}
+                <Pagination
+                    page={meta.page}
+                    totalPage={meta.lastPage}
+                    total={meta.total}
+                    isLoading={isLoading}
+                    onPageChange={handlePageChange}
+                />
             </main>
         </div>
     );
