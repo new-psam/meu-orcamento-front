@@ -7,12 +7,14 @@ import { TransactionTable } from "../components/TransactionTable";
 import { useTransactions } from "../hooks/useTransactions";
 import { Pagination } from "../components/Pagination";
 import { MonthSelector } from "../components/MonthSelector";
+import { transactionService, type Transaction } from "../services/transaction.service";
 
 export function Dashboard() {
     const { logout } = useAuth();
 
     // O modal controla a UI local, fica no componente
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null)
 
     //mágica do hook: extraimos apenas o que o JSX precisa desenhar
     const {
@@ -31,14 +33,31 @@ export function Dashboard() {
         handlePreviousMonth
     } = useTransactions();
 
+    // Funções de Ação
+    const handleEdit = (transaction: Transaction) => {
+        setEditingTransaction(transaction);
+        setIsModalOpen(true);
+    }
+
+    const handleDelete = async (id: string) => {
+        if (confirm("Tem certeza que deseja excluir esta transação?")){
+            await transactionService.delete(id);
+            loadData();
+        }
+    }
+
     return (
         <div className="flex min-h-screen flex-col bg-gray-50 md:flex-row">
 
             {/* O Modal invisível fica esperando o comando para aparecer*/}
             <NewTransactionModal
                 isOpen={isModalOpen}
-                onClose={() => setIsModalOpen(false)}
+                onClose={() => {
+                    setEditingTransaction(null);
+                    setIsModalOpen(false);
+                }}
                 onSuccess={loadData} // Quando salvar, ele chama o loadSumary novamente!
+                editingTransaction={editingTransaction}
             />
 
             {/* ------------------- Barra Lateral (Desktop) -------------------------- */}
@@ -96,7 +115,7 @@ export function Dashboard() {
 
                     {/* Botão que aciona oestado para abrir o modal */}
                     <button
-                        onClick={() => setIsModalOpen(true)}
+                        onClick={() => {setEditingTransaction(null); setIsModalOpen(true)}}
                         className="flex items-center justify-center gap-2 rounded-lg bg-blue-600 px-4 py-2 font-medium text-white transition-colors hover:bg-blue-700"
                     >
                         <Plus size={20} />
@@ -172,6 +191,8 @@ export function Dashboard() {
                 <TransactionTable
                     transactions={transactions}
                     isLoading={isLoading}
+                    onEdit={handleEdit}
+                    onDelete={handleDelete}
                 />
 
                 {/* componente da paginação aqui*/}

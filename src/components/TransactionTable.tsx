@@ -1,3 +1,4 @@
+import { Edit2, Trash2 } from "lucide-react";
 import { type Transaction } from "../services/transaction.service";
 import { formatDateBR } from "../utils/dateUtils";
 import { formatCurrency } from "../utils/formatCurrency";
@@ -5,9 +6,11 @@ import { formatCurrency } from "../utils/formatCurrency";
 interface TransactionTablePros {
     transactions: Transaction[];
     isLoading: boolean;
+    onEdit: (transaction: Transaction)=> void;
+    onDelete: (id: string) => void;
 }
 
-export function TransactionTable({ transactions, isLoading}: TransactionTablePros) {
+export function TransactionTable({ transactions, isLoading, onEdit, onDelete}: TransactionTablePros) {
     if (isLoading) {
         return (
             <div className="mt-8 rounded-xl border bg-white p-6 shadow-sm">
@@ -34,10 +37,11 @@ export function TransactionTable({ transactions, isLoading}: TransactionTablePro
                 <table className="w-full text-left text-sm text-gray-600">
                     <thead className="border-b bg-gray-50 text-gray-900">
                         <tr>
-                            <th className="px-6 py4 font-medium">Data</th>
-                            <th className="px-6 py4 font-medium">Descrição</th>
-                            <th className="px-6 py4 font-medium">Situação</th>
-                            <th className="px-6 py4 text-right font-medium">Valor</th>
+                            <th className="px-6 py-4 font-medium">Data</th>
+                            <th className="px-6 py-4 font-medium">Descrição</th>
+                            <th className="px-6 py-4 font-medium">Situação</th>
+                            <th className="px-6 py-4 text-right font-medium">Valor</th>
+                            <th className="px-6 py-4 text-right font-medium">Ações</th>
                         </tr>
                     </thead>
                     <tbody className="divide-y">
@@ -66,6 +70,23 @@ export function TransactionTable({ transactions, isLoading}: TransactionTablePro
                                     }`}>
                                         {transaction.type === 'EXPENSE' ? '- ' : '+ '}
                                         {formatCurrency(transaction.amount)}
+                                    </td>
+                                    {/* Botões de ação*/}
+                                    <td className="px-6 py-4 text-right whitespace-nowrap">
+                                        <button
+                                            onClick={()=> onEdit(transaction)}
+                                            className="text-blue-600 hover:text-blue-800 mr-3 transition-colors"
+                                            title="Editar"
+                                        >
+                                            <Edit2 size={18}/>
+                                        </button>
+                                        <button
+                                            onClick={()=> onDelete(transaction.id)}
+                                            className="text-red-600 hover:text-red-800 mr-3 transition-colors"
+                                            title="Excluir"
+                                        >
+                                            <Trash2 size={18}/>
+                                        </button>
                                     </td>
                                 </tr>
                             );

@@ -1,17 +1,19 @@
-import { useState } from "react";
-import { transactionService } from "../services/transaction.service";
+import { useEffect, useState } from "react";
+import { transactionService, type Transaction } from "../services/transaction.service";
 import { Input } from "./Input";
 import { Button } from "./Button";
 import { getTodayString } from "../utils/dateUtils";
+import { X } from "lucide-react";
 
 interface NewTransactionModalProps {
     isOpen: boolean;
     onClose: () => void;
     // Essa função sera chamada assim que a transação for salva, para avisar o Dashboard para recarregar
     onSuccess: () => void;
+    editingTransaction?: Transaction | null;
 }
 
-export function NewTransactionModal({isOpen, onClose, onSuccess}: NewTransactionModalProps){
+export function NewTransactionModal({isOpen, onClose, onSuccess, editingTransaction}: NewTransactionModalProps){
     const [description, setDescription] = useState("");
     const [amount, setAmount] = useState("");
     const [type, setType] = useState<"INCOME" | "EXPENSE">("EXPENSE");
@@ -20,8 +22,27 @@ export function NewTransactionModal({isOpen, onClose, onSuccess}: NewTransaction
 
     const [isLoading, setIsLoading] = useState(false);
 
+    //Use um useUffect para carregar os dados quando editingTransaction mudar
+    useEffect(() => {
+        if (editingTransaction) {
+            setDescription(editingTransaction.description);
+            setAmount(String(editingTransaction.amount));
+            setType(editingTransaction.type);
+            setDate(editingTransaction.date.split('T')[0]);
+            setStatus(editingTransaction.status);
+        } else {
+            // Limpa se for nova criação
+            setDescription(""); 
+            setAmount(""); 
+            setType("EXPENSE"); 
+            setDate(""); 
+            setStatus("PAID");
+        }
+    }, [editingTransaction, isOpen]);
+
     // Se o modal não estiver aberto, o React não renderiza nada
     if (!isOpen) return null;
+
 
     // "Smart Default"
     const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -44,23 +65,25 @@ export function NewTransactionModal({isOpen, onClose, onSuccess}: NewTransaction
 
     const handleSubmit = async (e: React.SyntheticEvent<HTMLFormElement>) => {
         e.preventDefault();
-
         if (!date) return;
 
         setIsLoading(true);
 
         try {
-            // o Zod no bacjkend exige um formato ISO de data
-            // como o input type="date" devolve YYYY-MM-DD, nós convertemos ele aqui:
-            const dateISO = new Date(`${date}T12:00:00Z`).toISOString();
-
-            await transactionService.create({
+            // prepara o objeto de dados
+            const transactionData = {
                 description,
                 amount: Number(amount),
                 type,
-                date: dateISO,
+                date: new Date(`${date}T12:00:00Z`).toISOString(),// o Zod no bacjkend exige um formato ISO de data
                 status,
-            });
+            }
+            // decide se é criação ou Atualização
+            if (editingTransaction) {
+                await transactionService.update(editingTransaction.id, transactionData);
+            }else{
+                await transactionService.create(transactionData);
+            }
 
             // Limpa os campos após salvar
             setDescription("");
@@ -92,7 +115,9 @@ export function NewTransactionModal({isOpen, onClose, onSuccess}: NewTransaction
                     <X size={24} />
                 </button>
 
-                <h2 className="mb-6 text-2xl font-bold text-gray-800">Nova Transação</h2>
+                <h2 className="mb-6 text-2xl font-bold text-gray-800">
+                    {editingTransaction ? "Editar Transação" : "Nova Transação"}
+                </h2>
 
                 <form onSubmit={handleSubmit} className="space-y-4">
                     <div>
