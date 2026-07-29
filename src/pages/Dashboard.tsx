@@ -198,7 +198,7 @@ export function Dashboard() {
                 {/* componente da paginação aqui*/}
                 <Pagination
                     page={meta.page}
-                    totalPage={meta.lastPage}
+                    totalPage={meta.totalPage}
                     total={meta.total}
                     isLoading={isLoading}
                     onPageChange={handlePageChange}

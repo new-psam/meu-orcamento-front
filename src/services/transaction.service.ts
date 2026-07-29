@@ -36,6 +36,7 @@ export interface GetTransactionsParams {
     page?: number;
     limit?: number;
     categoryId?: string;
+    status?: "PAID"| "PENDING";
 }
 
 // O formato que o backend devolve
@@ -45,7 +46,7 @@ export interface PaginatedTransactions {
         total: number;
         page: number;
         limit: number;
-        lastPage: number;
+        totalPage: number;
     }
 }
 
@@ -56,8 +57,10 @@ export const transactionService = {
         return response.data;
     },
 
-    async getSummary(): Promise<TransactionSummary>{
-        const response = await api.get<TransactionSummary>("/transactions/summary");
+    async getSummary(month: number, year: number): Promise<TransactionSummary>{
+        const response = await api.get<TransactionSummary>("/transactions/summary", 
+            { params: {month, year }}
+        );
         return response.data
     },
 
