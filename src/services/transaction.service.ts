@@ -57,9 +57,9 @@ export const transactionService = {
         return response.data;
     },
 
-    async getSummary(month: number, year: number): Promise<TransactionSummary>{
+    async getSummary(month: number, year: number, status?: "PAID" | "PENDING"): Promise<TransactionSummary>{
         const response = await api.get<TransactionSummary>("/transactions/summary", 
-            { params: {month, year }}
+            { params: {month, year, status  }}
         );
         return response.data
     },

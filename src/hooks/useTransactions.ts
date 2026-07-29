@@ -31,7 +31,11 @@ export function useTransactions(){
                     year: currentYear,
                     status: filter === "ALL" ? undefined : filter
                 }),
-                transactionService.getSummary(currentMonth, currentYear)
+                transactionService.getSummary(
+                    currentMonth, 
+                    currentYear, 
+                    filter === "ALL" ? undefined : filter
+                )
             ]);
 
             //Aqui a grande sacada: pegamos apenas a array de transações do objeto
