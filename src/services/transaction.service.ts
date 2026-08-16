@@ -21,7 +21,7 @@ export interface CreateTransactionData {
     categoryId?: string;
 }
 
-export interface UpdateTransactionData extends Partial<CreateTransactionData> {}
+export type UpdateTransactionData = Partial<CreateTransactionData>;
 
 export interface TransactionSummary {
     incomes: number;

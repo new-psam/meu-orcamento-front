@@ -1,13 +1,18 @@
-name: Frontend CI
+name: Frontend CI/CD
 
 on:
   push:
     branches: ["main"]
+
   pull_request:
     branches: ["main"]
 
 jobs:
+  # ==========================================
+  # CI
+  # ==========================================
   build-and-test:
+    name: Build and Test
     runs-on: ubuntu-latest
 
     steps:
@@ -18,8 +23,9 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: "22.x"
+          cache: "npm"
 
-      - name: Instalar dependencias
+      - name: Instalar dependências
         run: npm ci
 
       - name: Rodar o Linter
@@ -28,5 +34,18 @@ jobs:
       - name: Rodar testes
         run: npm run test
 
-      - name: Buildar o PRojeto
+      - name: Buildar o projeto
         run: npm run build
+
+  # ==========================================
+  # CD
+  # ==========================================
+  deploy:
+    name: Deploy to Render
+    needs: build-and-test
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Deploy to Render
+        run: curl -X POST "${{ secrets.RENDER_DEPLOY_HOOK }}"
