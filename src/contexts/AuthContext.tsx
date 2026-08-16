@@ -41,7 +41,7 @@ export function AuthProvider({ children }: { children : ReactNode }) {
 }
 
 // Hook personalizado para facilitar o uso nas telas
-// eslint-disable-next-line react-hooks/set-state-in-effect
+// eslint-disable-next-line react-refresh/only-export-components
 export function useAuth() {
     return useContext(AuthContext);
 }
