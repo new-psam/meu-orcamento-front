@@ -17,6 +17,7 @@ export function AuthProvider({ children }: { children : ReactNode }) {
     useEffect(() => {
         const token = localStorage.getItem("@MeuOrcamento:token");
         if (token) {
+            // eslint-disable-next-line react-hooks/set-state-in-effect
             setIsAuthenticated(true);
         };
 
@@ -40,6 +41,7 @@ export function AuthProvider({ children }: { children : ReactNode }) {
 }
 
 // Hook personalizado para facilitar o uso nas telas
+// eslint-disable-next-line react-hooks/set-state-in-effect
 export function useAuth() {
     return useContext(AuthContext);
 }

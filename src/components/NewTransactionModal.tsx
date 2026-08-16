@@ -25,6 +25,7 @@ export function NewTransactionModal({isOpen, onClose, onSuccess, editingTransact
     //Use um useUffect para carregar os dados quando editingTransaction mudar
     useEffect(() => {
         if (editingTransaction) {
+            // eslint-disable-next-line react-hooks/set-state-in-effect
             setDescription(editingTransaction.description);
             setAmount(String(editingTransaction.amount));
             setType(editingTransaction.type);

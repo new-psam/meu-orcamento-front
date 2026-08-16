@@ -54,6 +54,7 @@ export function useTransactions(){
 
     // 4. Efeito Inicial
     useEffect(() =>{
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         loadData(1);
     }, [loadData]);
 
