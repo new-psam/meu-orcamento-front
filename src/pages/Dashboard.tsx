@@ -7,7 +7,8 @@ import { TransactionTable } from "../components/TransactionTable";
 import { useTransactions } from "../hooks/useTransactions";
 import { Pagination } from "../components/Pagination";
 import { MonthSelector } from "../components/MonthSelector";
-import { transactionService, type Transaction } from "../services/transaction.service";
+import { transactionService} from "../services/transaction.service";
+import type { Transaction } from "../types/transaction.types"
 
 export function Dashboard() {
     const { logout } = useAuth();
