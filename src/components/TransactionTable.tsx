@@ -1,5 +1,5 @@
 import { Edit2, Trash2 } from "lucide-react";
-import { type Transaction } from "../services/transaction.service";
+import  type { Transaction } from "../types/transaction.types";
 import { formatDateBR } from "../utils/dateUtils";
 import { formatCurrency } from "../utils/formatCurrency";
 

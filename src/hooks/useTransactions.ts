@@ -1,7 +1,8 @@
 import { useState, useCallback, useEffect } from "react";
-import { transactionService,  type Transaction, type TransactionSummary} from "../services/transaction.service";
+import { transactionService, type TransactionSummary} from "../services/transaction.service";
+import type {Transaction, TransactionStatus } from "../types/transaction.types"
 
-type FilterType = "ALL" | "PAID" | "PENDING"
+type FilterType = "ALL" | TransactionStatus;
 
 export function useTransactions(){
     // 1. Estados de Data

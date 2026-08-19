@@ -1,27 +1,16 @@
 import { api } from "./api";
 
-// Definimos o formato exato que uma transação tem no nosso sistema
-export interface Transaction {
-    id: string;
-    description: string;
-    amount: number;
-    type: "INCOME" | "EXPENSE";
-    status: "PAID" | "PENDING";
-    date: string
-    categoryId?: string;
-}
+// 1. importamos as entidade centralizadas que acabamos de criar
+import type {
+    Transaction,
+    CreateTransactionDTO,
+    UpdateTransactionDTO,
+    TransactionStatus
+} from "../types/transaction.types";
 
-// O formato exato para criar sem o ID
-export interface CreateTransactionData {
-    description: string;
-    amount: number;
-    type: "INCOME" | "EXPENSE";
-    date: string
-    status?: "PAID" | "PENDING";
-    categoryId?: string;
-}
-
-export type UpdateTransactionData = Partial<CreateTransactionData>;
+// ============================================================================
+// Tipagens exclusivas de Resposta da API e Filtros (Ficam no serviço)
+// ============================================================================
 
 export interface TransactionSummary {
     incomes: number;
@@ -36,7 +25,7 @@ export interface GetTransactionsParams {
     page?: number;
     limit?: number;
     categoryId?: string;
-    status?: "PAID"| "PENDING";
+    status?: TransactionStatus;
 }
 
 // O formato que o backend devolve
@@ -50,6 +39,10 @@ export interface PaginatedTransactions {
     }
 }
 
+// ============================================================================
+// Métodos de Serviço
+// ============================================================================
+
 export const transactionService = {
     async getAll(params?: GetTransactionsParams): Promise<PaginatedTransactions> {
         // O axios automaticamente transforma esse objeto { params } na string da URL (?month=6&page=1...)
@@ -57,7 +50,7 @@ export const transactionService = {
         return response.data;
     },
 
-    async getSummary(month: number, year: number, status?: "PAID" | "PENDING"): Promise<TransactionSummary>{
+    async getSummary(month: number, year: number, status?: TransactionStatus): Promise<TransactionSummary>{
         const response = await api.get<TransactionSummary>("/transactions/summary", 
             { params: {month, year, status  }}
         );
@@ -65,12 +58,12 @@ export const transactionService = {
     },
 
 
-    async create(data: CreateTransactionData): Promise<Transaction> {
+    async create(data: CreateTransactionDTO): Promise<Transaction> {
         const response = await api.post<Transaction>("/transactions", data);
         return response.data;
     },
 
-    async update(id: string, data: UpdateTransactionData) : Promise<Transaction> {
+    async update(id: string, data: UpdateTransactionDTO) : Promise<Transaction> {
         const response = await api.put<Transaction>(`/transactions/${id}`, data);
         return response.data;
     },

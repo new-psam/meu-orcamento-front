@@ -1,5 +1,10 @@
 import { useEffect, useState } from "react";
-import { transactionService, type Transaction } from "../services/transaction.service";
+import { transactionService } from "../services/transaction.service";
+import type {
+    Transaction,
+    TransactionType,
+    TransactionStatus
+} from "../types/transaction.types"
 import { Input } from "./Input";
 import { Button } from "./Button";
 import { getTodayString } from "../utils/dateUtils";
@@ -16,9 +21,9 @@ interface NewTransactionModalProps {
 export function NewTransactionModal({isOpen, onClose, onSuccess, editingTransaction}: NewTransactionModalProps){
     const [description, setDescription] = useState("");
     const [amount, setAmount] = useState("");
-    const [type, setType] = useState<"INCOME" | "EXPENSE">("EXPENSE");
+    const [type, setType] = useState<TransactionType>("EXPENSE");
     const [date, setDate] = useState("");
-    const [status, setStatus] = useState<"PAID" | "PENDING">("PAID");
+    const [status, setStatus] = useState<TransactionStatus>("PAID");
 
     const [isLoading, setIsLoading] = useState(false);
 
@@ -76,13 +81,16 @@ export function NewTransactionModal({isOpen, onClose, onSuccess, editingTransact
                 description,
                 amount: Number(amount),
                 type,
-                date: new Date(`${date}T12:00:00Z`).toISOString(),// o Zod no bacjkend exige um formato ISO de data
+                date: new Date(`${date}T12:00:00Z`).toISOString(),// o Zod no backend exige um formato ISO de data
                 status,
+                isRecurring: false
             }
             // decide se é criação ou Atualização
             if (editingTransaction) {
+                // Para o update, fazemosum cast forçado temporário por causa da tipagem estrita do Partial
                 await transactionService.update(editingTransaction.id, transactionData);
             }else{
+                // aqui usamos as 'as any'temporariamente caso o backend não precise receber o userId pelo front (se for via token)
                 await transactionService.create(transactionData);
             }
 
@@ -152,7 +160,7 @@ export function NewTransactionModal({isOpen, onClose, onSuccess, editingTransact
                             {/* Usano um select padrão com as classes de estilo do nosso Input para manter a harmonia visual*/}
                             <select
                                 value={type}
-                                onChange={(e)=> setType(e.target.value as "INCOME" | "EXPENSE")}
+                                onChange={(e)=> setType(e.target.value as TransactionType)}
                                 disabled={isLoading}
                                 className="flex h-11 w-full rounded-md border border-gray-300 bg-transparent px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-600 focus-border-transparent"
                             >
@@ -178,7 +186,7 @@ export function NewTransactionModal({isOpen, onClose, onSuccess, editingTransact
                         
                         <select
                             value={status}
-                            onChange={(e)=> setStatus(e.target.value as "PAID" | "PENDING")}
+                            onChange={(e)=> setStatus(e.target.value as TransactionStatus)}
                             disabled={isLoading}
                             className="flex h-11 w-full rounded-md border border-gray-300 bg-transparent px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-600 focus-border-transparent"
                         >
