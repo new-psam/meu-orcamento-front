@@ -233,7 +233,7 @@ export function NewTransactionModal({isOpen, onClose, onSuccess, editingTransact
                                 <Select
                                     id="recurrencePeriod"
                                     value={recurrencePeriod}
-                                    onChange={(e)=> setRecurrencePeriod(e.target.value as "MONTHLY")}
+                                    onChange={(e)=> setRecurrencePeriod(e.target.value as "MONTHLY" | "YEARLY" | "WEEKLY" | "DAILY")}
                                     disabled={isLoading}
                                 >
                                     <option value="MONTHLY">Mensal</option>
@@ -244,7 +244,8 @@ export function NewTransactionModal({isOpen, onClose, onSuccess, editingTransact
                             </div>
                             <div>
                                 <label htmlFor="installments" className="mb-1 block text-sm font-medium text-gray-700">
-                                    Quantas vezes?
+                                    Quantas vezes? <span className="text-gray-400 font-normal text-xs">
+                                        (Opcional)</span>
                                 </label>
                                 <Input
                                     id="installments"
@@ -255,8 +256,11 @@ export function NewTransactionModal({isOpen, onClose, onSuccess, editingTransact
                                     value={installments}
                                     onChange={(e)=> setInstallments(e.target.value)}
                                     disabled={isLoading}
-                                    required={isRecurring}
+                                    
                                 />
+                                <p className="mt-1 text-xs text-gray-500 leading-tight">
+                                    Digite as parcelas ou deixe vazio para despesas fixas (ex: Salário).
+                                </p>
                             </div>
                         </div>
                     )}
