@@ -25,8 +25,23 @@ export function NewTransactionModal({isOpen, onClose, onSuccess, editingTransact
     const [type, setType] = useState<TransactionType>("EXPENSE");
     const [date, setDate] = useState("");
     const [status, setStatus] = useState<TransactionStatus>("PAID");
-
     const [isLoading, setIsLoading] = useState(false);
+
+    const [isRecurring, setIsRecurring] = useState(false);
+    const [recurrencePeriod, setRecurrencePeriod] = useState<"MONTHLY" | "YEARLY" | "WEEKLY" | "DAILY">('MONTHLY');
+    const [installments, setInstallments] = useState('');
+
+
+    // função de recorrência
+    const getInstallmentsPlaceholder = () => {
+        switch (recurrencePeriod) {
+            case 'YEARLY': return 'Ex: 5';
+            case 'MONTHLY': return 'Ex: 12';
+            case 'WEEKLY': return 'Ex: 4';
+            case 'DAILY': return 'Ex: 30';
+            default: return 'Ex: 12'
+        }
+    };
 
     //Use um useUffect para carregar os dados quando editingTransaction mudar
     useEffect(() => {
@@ -84,7 +99,9 @@ export function NewTransactionModal({isOpen, onClose, onSuccess, editingTransact
                 type,
                 date: new Date(`${date}T12:00:00Z`).toISOString(),// o Zod no backend exige um formato ISO de data
                 status,
-                isRecurring: false
+                isRecurring,
+                installments: isRecurring && installments ? Number(installments) : undefined,
+                recurrencePeriod: isRecurring ? recurrencePeriod : undefined
             }
             // decide se é criação ou Atualização
             if (editingTransaction) {
@@ -183,6 +200,66 @@ export function NewTransactionModal({isOpen, onClose, onSuccess, editingTransact
                         <option value="PAID">Realizado (Pago/Recebido)</option>
                         <option value="PENDING">Previsão (Pendente)</option>
                     </Select>
+                </div>
+
+                {/* --- ÁREA DE RECORRÊNCIA ---*/}
+                <div className="border-t border-gray-200 pt-4 space-y-4">
+                    <label className="flex items-center space-x-2 cursor-pointer">
+                        <input
+                            type="checkbox"
+                            checked={isRecurring}
+                            onChange={(e)=>{
+                                setIsRecurring(e.target.checked);
+                                if (!e.target.checked) {
+                                    setInstallments(''); //Limpa se desmarcar
+                                    setRecurrencePeriod('MONTHLY');
+                                }
+                            }}
+                            disabled={isLoading}
+                            className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                        />
+                        <span className="text-sm font-medium text-gray-700">
+                            Repetir Transação (Parcelar)
+                        </span>
+                    </label>
+
+                    {/* Só renderiza os campos abaixo se o Checkbox estiver ligado*/}
+                    {isRecurring && (
+                        <div className="grid grid-cols-2 gap-4">
+                            <div>
+                                <label htmlFor="recurrencePeriod" className="mb-1 block text-sm font-medium text-gray-700">
+                                    Período da Repetição
+                                </label>
+                                <Select
+                                    id="recurrencePeriod"
+                                    value={recurrencePeriod}
+                                    onChange={(e)=> setRecurrencePeriod(e.target.value as "MONTHLY")}
+                                    disabled={isLoading}
+                                >
+                                    <option value="MONTHLY">Mensal</option>
+                                    <option value="YEARLY">Anual</option>
+                                    <option value="WEEKLY">Semanal</option>
+                                    <option value="DAILY">Diário</option>
+                                </Select>
+                            </div>
+                            <div>
+                                <label htmlFor="installments" className="mb-1 block text-sm font-medium text-gray-700">
+                                    Quantas vezes?
+                                </label>
+                                <Input
+                                    id="installments"
+                                    type="number"
+                                    min="2"
+                                    max="120"
+                                    placeholder={getInstallmentsPlaceholder()}
+                                    value={installments}
+                                    onChange={(e)=> setInstallments(e.target.value)}
+                                    disabled={isLoading}
+                                    required={isRecurring}
+                                />
+                            </div>
+                        </div>
+                    )}
                 </div>
 
                 <Button type="submit" className="w-full mt-2" disabled={isLoading}>
