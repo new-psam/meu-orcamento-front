@@ -227,10 +227,11 @@ export function NewTransactionModal({isOpen, onClose, onSuccess, editingTransact
                     {isRecurring && (
                         <div className="grid grid-cols-2 gap-4">
                             <div>
-                                <label className="mb-1 block text-sm font-medium text-gray-700">
-                                    Período de Repetição
+                                <label htmlFor="recurrencePeriod" className="mb-1 block text-sm font-medium text-gray-700">
+                                    Período da Repetição
                                 </label>
                                 <Select
+                                    id="recurrencePeriod"
                                     value={recurrencePeriod}
                                     onChange={(e)=> setRecurrencePeriod(e.target.value as "MONTHLY")}
                                     disabled={isLoading}
@@ -242,10 +243,11 @@ export function NewTransactionModal({isOpen, onClose, onSuccess, editingTransact
                                 </Select>
                             </div>
                             <div>
-                                <label className="mb-1 block text-sm font-medium text-gray-700">
+                                <label htmlFor="installments" className="mb-1 block text-sm font-medium text-gray-700">
                                     Quantas vezes?
                                 </label>
                                 <Input
+                                    id="installments"
                                     type="number"
                                     min="2"
                                     max="120"
