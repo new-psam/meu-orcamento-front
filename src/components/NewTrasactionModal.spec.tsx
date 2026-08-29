@@ -87,7 +87,7 @@ describe('Componente: NewTransactionModal', () => {
         await userEvent.click(toggle);
 
         //2. Verifica se o Dropdown de período surgiu na tela
-        const periodSelect = screen.getByLabelText(/periodo da repetição/i);
+        const periodSelect = screen.getByLabelText(/período da repetição/i);
         expect(periodSelect).toBeInTheDocument();
 
         //3. Verifica se o campo de parcelas também surgiu
