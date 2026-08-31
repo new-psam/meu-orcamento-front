@@ -9,6 +9,7 @@ import { Pagination } from "../components/Pagination";
 import { MonthSelector } from "../components/MonthSelector";
 import { transactionService} from "../services/transaction.service";
 import type { Transaction } from "../types/transaction.types"
+import { RecurringActionModal } from "../components/RecurringActionModal";
 
 export function Dashboard() {
     const { logout } = useAuth();
@@ -16,6 +17,13 @@ export function Dashboard() {
     // O modal controla a UI local, fica no componente
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null)
+
+    const [isRecurringModalOpen, setIsRecurringModalOpen] = useState(false);
+    const [recurringAction, setRecurringAction] = useState<"edit" | "delete">("edit");
+    const [transactionToIntercept, setTransactionToIntercept] = useState<Transaction | null>(null);
+
+// Estado extra para lembrar se o usuário escolheu "SINGLE" ou "ALL" na hora de salvar a edição
+    const [recurringEditMode, setRecurringEditMode] = useState<"SINGLE" | "ALL">("SINGLE");
 
     //mágica do hook: extraimos apenas o que o JSX precisa desenhar
     const {
@@ -36,14 +44,52 @@ export function Dashboard() {
 
     // Funções de Ação
     const handleEdit = (transaction: Transaction) => {
-        setEditingTransaction(transaction);
-        setIsModalOpen(true);
+        if(transaction.isRecurring){
+            // Se for recorrente, pausa e abre a pergunta
+            setTransactionToIntercept(transaction);
+            setRecurringAction('edit');
+            setIsRecurringModalOpen(true);
+        }else{
+            // Se for normal, abre o modal de edição direto
+            setEditingTransaction(transaction);
+            setIsModalOpen(true);
+        }
     }
 
-    const handleDelete = async (id: string) => {
-        if (confirm("Tem certeza que deseja excluir esta transação?")){
-            await transactionService.delete(id);
+    const handleDelete = async (transaction: Transaction) => {
+        if(transaction.isRecurring){
+            // Se for recorrente, pausa a ação e abre o nosso modal de pergunta
+            setTransactionToIntercept(transaction);
+            setRecurringAction("delete");
+            setIsRecurringModalOpen(true);
+        }else{
+            // Se for normal, faz o que sempre fez (usa o confirma do navegador)
+            if (confirm("Tem certeza que deseja excluir esta transação?")){
+                await transactionService.delete(transaction.id);
+                loadData();
+            }
+        }
+    }
+
+    const handleRecurringConfirm = async (actionType: "SINGLE" | "ALL") => {
+        // 1. Fecha ao odal de pergunta
+        setIsRecurringModalOpen(false)
+
+        if(!transactionToIntercept) return;
+
+        if(recurringAction === "delete") {
+            // Se for exclusão: dispara a API passando a flag de deletar todas ou não
+            const deleteALL = actionType === "ALL";
+
+            await transactionService.delete(transactionToIntercept.id, deleteALL);
             loadData();
+        }else if (recurringAction === "edit"){
+            // Se for edição: guarda a escolha do usuário no estado ....
+            setRecurringEditMode(actionType);
+
+            // ... e abre o modal de formulário normal com os dados da transação
+            setEditingTransaction(transactionToIntercept);
+            setIsModalOpen(true);
         }
     }
 
@@ -59,6 +105,14 @@ export function Dashboard() {
                 }}
                 onSuccess={loadData} // Quando salvar, ele chama o loadSumary novamente!
                 editingTransaction={editingTransaction}
+                recurringEditMode={recurringEditMode}
+            />
+
+            <RecurringActionModal
+                isOpen={isRecurringModalOpen}
+                onClose={()=> setIsRecurringModalOpen(false)}
+                onConfirm={handleRecurringConfirm}
+                actionName={recurringAction}
             />
 
             {/* ------------------- Barra Lateral (Desktop) -------------------------- */}

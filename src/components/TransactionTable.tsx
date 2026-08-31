@@ -7,7 +7,7 @@ interface TransactionTablePros {
     transactions: Transaction[];
     isLoading: boolean;
     onEdit: (transaction: Transaction)=> void;
-    onDelete: (id: string) => void;
+    onDelete: (transaction: Transaction) => void;
 }
 
 export function TransactionTable({ transactions, isLoading, onEdit, onDelete}: TransactionTablePros) {
@@ -46,6 +46,9 @@ export function TransactionTable({ transactions, isLoading, onEdit, onDelete}: T
                     </thead>
                     <tbody className="divide-y">
                         {transactions.map((transaction) => {
+                            // 1. A MÁGICA ACONTECE AQUI: Verifica se a descrição tem o padrão (1/10)
+                            const isInstallment = /\(\d+\/\d+\)/.test(transaction.description);
+                            
                             // Converte a data ISO para o formato brasileiro (DD/MM?YYYY)
                             // Como salvamos com T12:00:00Z, o getUTCDate garante que o dia não mude por caso do fuso horário
                             const formattedDate = formatDateBR(transaction.date);
@@ -53,7 +56,30 @@ export function TransactionTable({ transactions, isLoading, onEdit, onDelete}: T
                             return (
                                 <tr key={transaction.id} className="hover:bg-gray-50 transition-colors">
                                     <td className="px-6 py-4 whitespace-nowrap">{formattedDate}</td>
-                                    <td className="px-6 py-4 font-medium text-gray-900">{transaction.description}</td>
+
+                                    <td className="px-6 py-4 whitespace-nowrap">
+                                        <div className="flex items-center space-x-2">
+                                            <span className="text-sm font-medium text-gray-700">
+                                                {transaction.description}
+                                            </span>
+
+                                            {/* Badge Dinâmica: Roxa para Parcelado, Azul para Fixo */}
+                                            {transaction.isRecurring && (
+                                                <span className={`inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ring-1 ring-inset ${
+                                                    isInstallment
+                                                        ? "bg-purple-50 text-purple-700 ring-purple-700/10"
+                                                        : "bg-blue-50 text-blue-700 ring-blue-700/10"
+                                                }`}>
+                                                    {/* Opcional: Você pode até trocar o SVG do ícone aqui se quiser! */}
+                                                    <svg className="mr-1 h-3 w-3" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99" />
+                                                    </svg>
+                                                    {isInstallment ? "Parcelado" : "Fixo"}
+                                                </span>
+                                            )}
+                                        </div>
+                                    </td>
+
                                     <td className="px-6 py-4">
                                         {transaction.status === 'PAID' ? (
                                             <span className="inline-flex items-center rounded-full bg-green-50 px-2.5 py-0.5 text-xs font-medium text-green-700 ring-1 ring-inset ring-green-600/20">
@@ -81,7 +107,7 @@ export function TransactionTable({ transactions, isLoading, onEdit, onDelete}: T
                                             <Edit2 size={18}/>
                                         </button>
                                         <button
-                                            onClick={()=> onDelete(transaction.id)}
+                                            onClick={()=> onDelete(transaction)}
                                             className="text-red-600 hover:text-red-800 mr-3 transition-colors"
                                             title="Excluir"
                                         >

@@ -63,12 +63,15 @@ export const transactionService = {
         return response.data;
     },
 
-    async update(id: string, data: UpdateTransactionDTO) : Promise<Transaction> {
-        const response = await api.put<Transaction>(`/transactions/${id}`, data);
+    async update(id: string, data: UpdateTransactionDTO, updateAll: boolean = false) : Promise<Transaction> {
+        const url = updateAll ? `/transactions/${id}?updateAll=true` : `/transactions/${id}`;
+        const response = await api.put<Transaction>(url, data);
         return response.data;
     },
 
-    async delete(id: string): Promise<void>{
-        await api.delete(`/transactions/${id}`);
+    async delete(id: string, deleteAll: boolean = false): Promise<void>{
+
+        const url = deleteAll ? `/transactions/${id}?deleteAll=true` : `/transactions/${id}`;
+        await api.delete(url);
     }
 };
