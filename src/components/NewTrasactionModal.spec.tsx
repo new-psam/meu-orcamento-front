@@ -122,6 +122,7 @@ describe('Componente: NewTransactionModal', () => {
         render(
             <NewTransactionModal
                 {...defaultProps}
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 editingTransaction={mockEditingTransaction as any}
             />
         );
