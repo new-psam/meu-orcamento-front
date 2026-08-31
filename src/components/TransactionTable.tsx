@@ -7,7 +7,7 @@ interface TransactionTablePros {
     transactions: Transaction[];
     isLoading: boolean;
     onEdit: (transaction: Transaction)=> void;
-    onDelete: (id: string) => void;
+    onDelete: (transaction: Transaction) => void;
 }
 
 export function TransactionTable({ transactions, isLoading, onEdit, onDelete}: TransactionTablePros) {
@@ -107,7 +107,7 @@ export function TransactionTable({ transactions, isLoading, onEdit, onDelete}: T
                                             <Edit2 size={18}/>
                                         </button>
                                         <button
-                                            onClick={()=> onDelete(transaction.id)}
+                                            onClick={()=> onDelete(transaction)}
                                             className="text-red-600 hover:text-red-800 mr-3 transition-colors"
                                             title="Excluir"
                                         >

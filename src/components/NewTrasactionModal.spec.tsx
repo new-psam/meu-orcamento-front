@@ -103,4 +103,37 @@ describe('Componente: NewTransactionModal', () => {
         // 6. O placeholder deve reagir e sugerir 5 anos
         expect(installmentsInput).toHaveAttribute('placeholder', 'Ex: 5');
     });
+
+    it('Deve desabilitar os campos de estrutura de recorrência no modo edição', () =>{
+        //1.  Arrange: Transação recorrente vindo do banco de dados
+        const mockEditingTransaction = {
+            id: "123e4567-e89b-12d3-a456-426614174000",
+            description: "Notebook (1/10)",
+            amount: 5000,
+            type: "EXPENSE",
+            date: "2026-09-15",
+            status: "PENDING",
+            isRecurring: true,
+            recurrencePeriod: "MONTHLY",
+            recurrenceGroupId: "grupo-123"
+        };
+
+        // Renderizamos o modal passando a transação como prop de edição
+        render(
+            <NewTransactionModal
+                {...defaultProps}
+                editingTransaction={mockEditingTransaction as any}
+            />
+        );
+
+        // 2. Act: Buscamos os campos estruturais na tela
+        const toggle = screen.getByLabelText(/repetir transação/i);
+        const periodSelect = screen.getByLabelText(/período da repetição/i);
+        const installmentsInput = screen.getByLabelText(/quantas vezes/i);
+
+        // 3. Assert: Exigimos que todos estejam travados
+        expect(toggle).toBeDisabled();
+        expect(periodSelect).toBeDisabled();
+        expect(installmentsInput).toBeDisabled();
+    })
 });

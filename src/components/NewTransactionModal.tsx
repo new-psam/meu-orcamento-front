@@ -17,9 +17,19 @@ interface NewTransactionModalProps {
     // Essa função sera chamada assim que a transação for salva, para avisar o Dashboard para recarregar
     onSuccess: () => void;
     editingTransaction?: Transaction | null;
+    recurringEditMode?: "SINGLE" | "ALL";
 }
 
-export function NewTransactionModal({isOpen, onClose, onSuccess, editingTransaction}: NewTransactionModalProps){
+export function NewTransactionModal({
+        isOpen, 
+        onClose, 
+        onSuccess, 
+        editingTransaction,
+        recurringEditMode = 'SINGLE'
+    }: NewTransactionModalProps){
+
+    const isEditing = !!editingTransaction;
+
     const [description, setDescription] = useState("");
     const [amount, setAmount] = useState("");
     const [type, setType] = useState<TransactionType>("EXPENSE");
@@ -52,6 +62,11 @@ export function NewTransactionModal({isOpen, onClose, onSuccess, editingTransact
             setType(editingTransaction.type);
             setDate(editingTransaction.date.split('T')[0]);
             setStatus(editingTransaction.status);
+
+            setIsRecurring(editingTransaction.isRecurring || false);
+            if (editingTransaction.recurrencePeriod) {
+                setRecurrencePeriod(editingTransaction.recurrencePeriod);
+            }
         } else {
             // Limpa se for nova criação
             setDescription(""); 
@@ -105,8 +120,10 @@ export function NewTransactionModal({isOpen, onClose, onSuccess, editingTransact
             }
             // decide se é criação ou Atualização
             if (editingTransaction) {
+                // 1. Transforma o texto "ALL" em um booleano (true ou false)
+                const isUpdateAll = recurringEditMode === 'ALL';
                 // Para o update, fazemosum cast forçado temporário por causa da tipagem estrita do Partial
-                await transactionService.update(editingTransaction.id, transactionData);
+                await transactionService.update(editingTransaction.id, transactionData, isUpdateAll);
             }else{
                 // aqui usamos as 'as any'temporariamente caso o backend não precise receber o userId pelo front (se for via token)
                 await transactionService.create(transactionData);
@@ -215,8 +232,8 @@ export function NewTransactionModal({isOpen, onClose, onSuccess, editingTransact
                                     setRecurrencePeriod('MONTHLY');
                                 }
                             }}
-                            disabled={isLoading}
-                            className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                            disabled={isEditing}
+                            className="disabled:opacity-50 disabled:cursor-not-allowed h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                         />
                         <span className="text-sm font-medium text-gray-700">
                             Repetir Transação (Parcelar)
@@ -234,7 +251,8 @@ export function NewTransactionModal({isOpen, onClose, onSuccess, editingTransact
                                     id="recurrencePeriod"
                                     value={recurrencePeriod}
                                     onChange={(e)=> setRecurrencePeriod(e.target.value as "MONTHLY" | "YEARLY" | "WEEKLY" | "DAILY")}
-                                    disabled={isLoading}
+                                    disabled={isEditing}
+                                    className="disabled:bg-gray-100 disabled:text-gray-500"
                                 >
                                     <option value="MONTHLY">Mensal</option>
                                     <option value="YEARLY">Anual</option>
@@ -255,8 +273,8 @@ export function NewTransactionModal({isOpen, onClose, onSuccess, editingTransact
                                     placeholder={getInstallmentsPlaceholder()}
                                     value={installments}
                                     onChange={(e)=> setInstallments(e.target.value)}
-                                    disabled={isLoading}
-                                    
+                                    disabled={isEditing}
+                                    className="disabled:bg-gray-100 disabled:text-gray-500"
                                 />
                                 <p className="mt-1 text-xs text-gray-500 leading-tight">
                                     Digite as parcelas ou deixe vazio para despesas fixas (ex: Salário).
