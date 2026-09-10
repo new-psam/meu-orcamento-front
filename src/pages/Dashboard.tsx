@@ -1,15 +1,15 @@
 import { AlertCircle, LayoutDashboard, LogOut, Menu, Plus, Receipt } from "lucide-react";
 import { useAuth } from "../contexts/AuthContext";
 import { useState } from "react";
-import { SummaryCard } from "../components/SummaryCard";
-import { NewTransactionModal } from "../components/NewTransactionModal";
-import { TransactionTable } from "../components/TransactionTable";
+import { SummaryCard } from "../components/transactions/SummaryCard";
+import { NewTransactionModal } from "../components/transactions/NewTransactionModal/NewTransactionModal";
+import { TransactionTable } from "../components/transactions/TransactionTable";
 import { useTransactions } from "../hooks/useTransactions";
-import { Pagination } from "../components/Pagination";
-import { MonthSelector } from "../components/MonthSelector";
+import { Pagination } from "../components/ui/Pagination/Pagination";
+import { MonthSelector } from "../components/transactions/MonthSelector/MonthSelector";
 import { transactionService} from "../services/transaction.service";
 import type { Transaction } from "../types/transaction.types"
-import { RecurringActionModal } from "../components/RecurringActionModal";
+import { RecurringActionModal } from "../components/transactions/RecurringActionModal/RecurringActionModal";
 
 export function Dashboard() {
     const { logout } = useAuth();

@@ -1,15 +1,15 @@
 import { useEffect, useState } from "react";
-import { transactionService } from "../services/transaction.service";
+import { transactionService } from "@/services/transaction.service";
 import type {
     Transaction,
     TransactionType,
     TransactionStatus
-} from "../types/transaction.types"
-import { Input } from "./Input";
-import { Button } from "./Button";
-import { getTodayString } from "../utils/dateUtils";
-import { Modal } from "./Modal";
-import { Select } from "./Select";
+} from "@/types/transaction.types"
+import { Input } from "@/components/ui/Input";
+import { Button } from "@/components/ui/Button";
+import { getTodayString } from "@/utils/dateUtils";
+import { Modal } from "@/components/ui/Modal/Modal";
+import { Select } from "@/components/ui/Select";
 
 interface NewTransactionModalProps {
     isOpen: boolean;

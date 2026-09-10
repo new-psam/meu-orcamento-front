@@ -1,5 +1,5 @@
-import { Button } from "./Button";
-import { Modal } from "./Modal";
+import { Button } from "@/components/ui/Button";
+import { Modal } from "@/components/ui/Modal/Modal";
 
 export type RecurringActionType = "SINGLE" | "ALL";
 

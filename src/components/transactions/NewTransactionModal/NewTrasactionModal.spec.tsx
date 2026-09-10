@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { transactionService } from "../services/transaction.service";
+import { transactionService } from "../../../services/transaction.service";
 import { render, screen } from "@testing-library/react";
 import { NewTransactionModal } from "./NewTransactionModal";
 import userEvent from "@testing-library/user-event";
@@ -9,7 +9,7 @@ import userEvent from "@testing-library/user-event";
 // Assim não fazemos requisições de verdade para o Backend
 
 
-vi.mock('../services/transaction.service', () => ({
+vi.mock('../../../services/transaction.service', () => ({
     transactionService: {
         create: vi.fn(),
         update: vi.fn(),
