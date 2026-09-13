@@ -1,7 +1,7 @@
 import { Edit2, Trash2 } from "lucide-react";
-import  type { Transaction } from "../types/transaction.types";
-import { formatDateBR } from "../utils/dateUtils";
-import { formatCurrency } from "../utils/formatCurrency";
+import { formatDateBR } from "@/utils/dateUtils";
+import { formatCurrency } from "@/utils/formatCurrency";
+import  type { Transaction } from "@/types/transaction.types";
 
 interface TransactionTablePros {
     transactions: Transaction[];
