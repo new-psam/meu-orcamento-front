@@ -44,6 +44,9 @@ export function useCategories() {
     };
 
     const removeCategory = async (id: string) => {
+        // 1. chama o avso nativo do navegador
+        const confirmou = window.confirm('Tem certeza que deseja remover esta categoria?');
+        if (!confirmou) return;
         try{
             await CategoryService.delete(id);
             setCategories(prev=> prev.filter(cat => cat.id !== id));
