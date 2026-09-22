@@ -1,6 +1,6 @@
 import { forwardRef } from "react";
 import type { InputHTMLAttributes } from "react";
-import { cn } from "../lib/utils"
+import { cn } from "@/lib/utils"
 
 // Estendemos as propriedades nativas do input e adicionamos uma propriedade "error"
 export interface InputProps extends InputHTMLAttributes<HTMLInputElement> {

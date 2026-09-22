@@ -1,4 +1,4 @@
-import { formatCurrency } from "../utils/formatCurrency";
+import { formatCurrency } from "@/utils/formatCurrency";
 
 interface SummaryCardProps {
     title: string;

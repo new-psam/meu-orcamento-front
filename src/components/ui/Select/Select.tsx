@@ -1,6 +1,6 @@
 import { forwardRef } from "react";
 import type { SelectHTMLAttributes } from "react";
-import { cn } from "../lib/utils";
+import { cn } from "@/lib/utils";
 
 // Estendemos as propriedades nativas do select e adicionamos a opção erro
 export interface SelectProps extends SelectHTMLAttributes<HTMLSelectElement> {

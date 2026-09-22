@@ -1,5 +1,5 @@
 import type { ButtonHTMLAttributes } from "react";
-import { cn } from "../lib/utils";
+import { cn } from "@/lib/utils";
 
 // Estendemos as propriedades nativas do HTML para não reiventar a roda
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {

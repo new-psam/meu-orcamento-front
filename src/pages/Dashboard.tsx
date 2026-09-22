@@ -1,15 +1,17 @@
 import { AlertCircle, LayoutDashboard, LogOut, Menu, Plus, Receipt } from "lucide-react";
 import { useAuth } from "../contexts/AuthContext";
 import { useState } from "react";
-import { SummaryCard } from "../components/SummaryCard";
-import { NewTransactionModal } from "../components/NewTransactionModal";
-import { TransactionTable } from "../components/TransactionTable";
+import { SummaryCard } from "../components/transactions/SummaryCard";
+import { NewTransactionModal } from "../components/transactions/NewTransactionModal/NewTransactionModal";
+import { TransactionTable } from "@/components/transactions/TransactionTable";
 import { useTransactions } from "../hooks/useTransactions";
-import { Pagination } from "../components/Pagination";
-import { MonthSelector } from "../components/MonthSelector";
+import { Pagination } from "../components/ui/Pagination/Pagination";
+import { MonthSelector } from "../components/transactions/MonthSelector/MonthSelector";
 import { transactionService} from "../services/transaction.service";
+import { RecurringActionModal } from "../components/transactions/RecurringActionModal/RecurringActionModal";
+import { Tags } from "lucide-react";
+import { CategoryManager } from "@/components/categories/CategoryManager";
 import type { Transaction } from "../types/transaction.types"
-import { RecurringActionModal } from "../components/RecurringActionModal";
 
 export function Dashboard() {
     const { logout } = useAuth();
@@ -24,6 +26,8 @@ export function Dashboard() {
 
 // Estado extra para lembrar se o usuário escolheu "SINGLE" ou "ALL" na hora de salvar a edição
     const [recurringEditMode, setRecurringEditMode] = useState<"SINGLE" | "ALL">("SINGLE");
+
+    const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
 
     //mágica do hook: extraimos apenas o que o JSX precisa desenhar
     const {
@@ -115,6 +119,10 @@ export function Dashboard() {
                 actionName={recurringAction}
             />
 
+            <CategoryManager
+                isOpen={isCategoryModalOpen}
+                onClose={() => setIsCategoryModalOpen(false)}
+            />
             {/* ------------------- Barra Lateral (Desktop) -------------------------- */}
             <aside className="hidden w-64 flex-col border-r bg-white px-4 py-6 md:flex">
                 <div className="mb-8 flex items-center gap-2 px-2">
@@ -133,6 +141,13 @@ export function Dashboard() {
                         <Receipt size={20} />
                         <span className="font-medium">Transações</span>
                     </a>
+                    <button
+                        onClick={() => setIsCategoryModalOpen(true)}
+                        className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-gray-600 transition-colors hover:bg-gray-100"
+                    >
+                        <Tags size={20} />
+                        <span className="font-medium">Categorias</span>
+                    </button>
                 </nav>
 
                 <div>

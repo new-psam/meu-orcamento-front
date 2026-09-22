@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { authService } from "../services/auth.service";
-import { Input } from "../components/Input";
-import { Button } from "../components/Button";
+import { Input } from "@/components/ui/Input";
+import { Button } from "@/components/ui/Button";
 
 export function Register() {
     const [ name, setName ] = useState("");
