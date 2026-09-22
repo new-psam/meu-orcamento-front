@@ -13,7 +13,7 @@ export function useCategories() {
             setError(null);
             const data = await CategoryService.list();
             setCategories(data);
-        } catch (err) {
+        } catch  {
             setError('Erro ao carregar categorias.');
         } finally {
             setIsLoading(false);
@@ -57,6 +57,7 @@ export function useCategories() {
     };
 
     useEffect(() => {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         loadCategories();
     }, [loadCategories]);
 
