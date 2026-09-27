@@ -10,6 +10,8 @@ import { Button } from "@/components/ui/Button";
 import { getTodayString } from "@/utils/dateUtils";
 import { Modal } from "@/components/ui/Modal/Modal";
 import { Select } from "@/components/ui/Select";
+import { useCategories } from "@/hooks/useCategories";
+import { Plus } from "lucide-react";
 
 interface NewTransactionModalProps {
     isOpen: boolean;
@@ -18,6 +20,8 @@ interface NewTransactionModalProps {
     onSuccess: () => void;
     editingTransaction?: Transaction | null;
     recurringEditMode?: "SINGLE" | "ALL";
+    // prop para abrir o gestor de categoorias diretamente do modal de transações
+    onOpenCategoryManager?: () => void;
 }
 
 export function NewTransactionModal({
@@ -25,11 +29,15 @@ export function NewTransactionModal({
         onClose, 
         onSuccess, 
         editingTransaction,
-        recurringEditMode = 'SINGLE'
+        recurringEditMode = 'SINGLE',
+        onOpenCategoryManager
     }: NewTransactionModalProps){
 
+    const { categories, loading } = useCategories();
     const isEditing = !!editingTransaction;
 
+    // Estado da Categoria
+    const [categoryId, setCategoryId] = useState("");
     const [description, setDescription] = useState("");
     const [amount, setAmount] = useState("");
     const [type, setType] = useState<TransactionType>("EXPENSE");
@@ -53,9 +61,11 @@ export function NewTransactionModal({
         }
     };
 
-    //Use um useUffect para carregar os dados quando editingTransaction mudar
+    //Use um useEffect para carregar os dados quando editingTransaction mudar
     useEffect(() => {
         if (editingTransaction) {
+            // Se a transação editada tiver categoria, define o ID, senão fica vazio
+            setCategoryId(editingTransaction.category?.id || editingTransaction.categoryId || "");
             // eslint-disable-next-line react-hooks/set-state-in-effect
             setDescription(editingTransaction.description);
             setAmount(String(editingTransaction.amount));
@@ -69,6 +79,7 @@ export function NewTransactionModal({
             }
         } else {
             // Limpa se for nova criação
+            setCategoryId("");
             setDescription(""); 
             setAmount(""); 
             setType("EXPENSE"); 
@@ -85,9 +96,7 @@ export function NewTransactionModal({
     const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const selectedDateStr = e.target.value; // Chega no formato YYYY-MM-DD
         setDate(selectedDateStr);
-
         if (!selectedDateStr) return;
-
         const todayStr = getTodayString();
     
         // Comparamos as strings (ex: '2026-07-01' > '2026-06-27')
@@ -102,13 +111,14 @@ export function NewTransactionModal({
 
     const handleSubmit = async (e: React.SyntheticEvent<HTMLFormElement>) => {
         e.preventDefault();
-        if (!date) return;
+        if (!date || !categoryId) return;
 
         setIsLoading(true);
 
         try {
             // prepara o objeto de dados
             const transactionData = {
+                categoryId,
                 description,
                 amount: Number(amount),
                 type,
@@ -122,14 +132,14 @@ export function NewTransactionModal({
             if (editingTransaction) {
                 // 1. Transforma o texto "ALL" em um booleano (true ou false)
                 const isUpdateAll = recurringEditMode === 'ALL';
-                // Para o update, fazemosum cast forçado temporário por causa da tipagem estrita do Partial
+                // Para o update, fazemos um cast forçado temporário por causa da tipagem estrita do Partial
                 await transactionService.update(editingTransaction.id, transactionData, isUpdateAll);
             }else{
-                // aqui usamos as 'as any'temporariamente caso o backend não precise receber o userId pelo front (se for via token)
                 await transactionService.create(transactionData);
             }
 
             // Limpa os campos após salvar
+            setCategoryId("");
             setDescription("");
             setAmount("");
             setType("EXPENSE");
@@ -164,6 +174,35 @@ export function NewTransactionModal({
                         disabled={isLoading}
                         required
                     />
+                </div>
+
+                <div>
+                    <div className="flex justify-between items-end mb-1">
+                        <label className="text-sm font-medium text-gray-700 block">Categoria</label>
+                        <button
+                            type="button"
+                            onClick={onOpenCategoryManager}
+                            className="text-xs font-semibold text-blue-600 hover:text-blue-800 flex items-center gap-1 transition-colors"
+                        >
+                            <Plus size={14} /> Nova Categoria
+                        </button>
+                    </div>
+                    <Select
+                        value={categoryId}
+                        onChange={(e) => setCategoryId(e.target.value)}
+                        required
+                        disabled={isLoading}
+                        className="w-full border border-gray-300 rounded-md p-2 bg-white focus:ring-2 focus:ring-blue-500 outline-none"
+                    >
+                        <option value="" disabled>
+                            {loading ? "Carregando..." : "Selecione uma categoria..."}
+                        </option>
+                        {categories.map((cat) => (
+                            <option key={cat.id} value={cat.id}>
+                                {cat.name}
+                            </option>
+                        ))}
+                    </Select>
                 </div>
 
                 <div>

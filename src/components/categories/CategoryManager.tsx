@@ -6,6 +6,20 @@ import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import { Pencil, Trash, X } from "lucide-react";
 
+// Paleta fixa baseada nas cores do Tailwind (garante consistência no design system)
+const PREDEFINED_COLORS = [
+    '#EF4444', // red
+    '#F97316', // orange
+    '#EAB308', // yellow
+    '#22C55E', // green
+    '#10B981', // emerald
+    '#06B6D4', // cyan
+    '#3B82F6', // blue
+    '#8B5CF6', // violet
+    '#D946EF', // fuchsia
+    '#6B7280', // gray
+];
+
 interface CategoryManagerProps {
   isOpen: boolean;
   onClose: () => void;
@@ -14,7 +28,7 @@ interface CategoryManagerProps {
 export function CategoryManager({ isOpen, onClose }: CategoryManagerProps) {
     const {categories, addCategory, updateCategory, removeCategory, loading, error} = useCategories();
     const [name, setName] = useState('');
-    const [color, setColor] = useState("#3b82f6");
+    const [color, setColor] = useState(PREDEFINED_COLORS[6]); // cor padrão azul do Tailwind
     const [editingId, setEditingId] = useState<string | null>(null);
 
     const handleSubmit = async (e: React.SyntheticEvent<HTMLFormElement>) => {
@@ -29,7 +43,7 @@ export function CategoryManager({ isOpen, onClose }: CategoryManagerProps) {
                 await addCategory({ name, color });
             }
             setName('');
-            setColor("#3b82f6");
+            setColor(PREDEFINED_COLORS[6]); // reseta para azul padrão
         } catch (err) {
             // O hook já seta a mensagem de erro no estado, mas o catch evita 
             // que a aplicação quebre silenciosamente caso a promessa seja rejeitada
@@ -40,13 +54,14 @@ export function CategoryManager({ isOpen, onClose }: CategoryManagerProps) {
     const handleEditClick = (cat: Category) => {
         setEditingId(cat.id);
         setName(cat.name);
-        setColor(cat.color || "#3b82f6");
+        // Se a categoria antiga tiver uma cor fora da paleta, mantém-na; caso contrário, usa o azul
+        setColor(cat.color || PREDEFINED_COLORS[6]); // fallback para azul padrão
     };
 
     const cancelEdit = () => {
         setEditingId(null);
         setName('');
-        setColor("#3b82f6");
+        setColor(PREDEFINED_COLORS[6]); // reseta para azul padrão
     };
 
     return (
@@ -60,36 +75,49 @@ export function CategoryManager({ isOpen, onClose }: CategoryManagerProps) {
                     </div>
                 )}
 
-                <form onSubmit={handleSubmit} className="flex gap-2 items-end">
-                    <div className="flex-1">
-                        <label className="text-sm font-medium text-gray-700">
-                            {editingId ? 'Editando Nome' : "Nova Categoria"}
-                        </label>
-                        <Input
-                            value={name}
-                            onChange={(e) => setName(e.target.value)}
-                            placeholder="Ex: Alimentação"
-                        />
-                    </div>
-                    <div className="flex-1">
-                        <label className="text-sm font-medium text-gray-700">
-                            Cor
-                        </label>
-                        <Input
-                            type="color"
-                            value={color}
-                            onChange={(e) => setColor(e.target.value)}
-                            className="h-10 w-14 bg-white border border-gray-300 rounded-md p-1 cursor-pointer"
-                        />
-                    </div>
-                    <Button type="submit" disabled={loading || !name.trim()}>
-                        {editingId ? 'Atualizar' : 'Adicionar'}
-                    </Button>
-                    {editingId && (
-                        <Button type="button" variant="outline" onClick={cancelEdit}>
-                            <X size={18} />
+                <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+                    <div className="flex gap-2 items-end">
+                        <div className="flex-1">
+                            <label className="text-sm font-medium text-gray-700 block mb-1">
+                                {editingId ? 'Editando Nome' : "Nova Categoria"}
+                            </label>
+                            <Input
+                                value={name}
+                                onChange={(e) => setName(e.target.value)}
+                                placeholder="Ex: Alimentação"
+                            />
+                        </div>
+                        <Button type="submit" disabled={loading || !name.trim()}>
+                            {editingId ? 'Atualizar' : 'Adicionar'}
                         </Button>
-                    )}
+                        {editingId && (
+                            <Button type="button" variant="outline" onClick={cancelEdit} title="Cancelar Edição">
+                                <X size={18} />
+                            </Button>
+                        )}
+                    </div>
+
+                    <div>
+                        <label className="text-sm font-medium text-gray-700 block mb-2">
+                            Cor da Categoria
+                        </label>
+                        <div className="flex gap-3 flex-wrap">
+                            {PREDEFINED_COLORS.map((hex)=>(
+                                <button
+                                    key={hex}
+                                    type="button"
+                                    onClick={() => setColor(hex)}
+                                    className={`w-7 h-7 rounded-full transition-all duration-200 border-2 outline-none focus-ring-2 focus:ring-offset-1 focus:ring-blue-500 hover:scale-110 ${
+                                        color === hex
+                                            ? 'border-gray-900 scale-110 shadow-md'
+                                            : 'border-transparent shadow-sm'
+                                    }`}
+                                    style={{ backgroundColor: hex }}
+                                    title={`Selecionar cor ${hex}`}
+                                />
+                            ))}
+                        </div>
+                    </div>
                 </form>
 
                 <div className="border-t pt-4 max-h-64 overflow-y-auto">

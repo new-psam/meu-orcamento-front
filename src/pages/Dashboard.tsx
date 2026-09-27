@@ -110,6 +110,7 @@ export function Dashboard() {
                 onSuccess={loadData} // Quando salvar, ele chama o loadSumary novamente!
                 editingTransaction={editingTransaction}
                 recurringEditMode={recurringEditMode}
+                onOpenCategoryManager={() => setIsCategoryModalOpen(true)}
             />
 
             <RecurringActionModal
