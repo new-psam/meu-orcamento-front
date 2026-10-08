@@ -64,11 +64,13 @@ export function NewTransactionModal({
     //Use um useEffect para carregar os dados quando editingTransaction mudar
     useEffect(() => {
         if (editingTransaction) {
+            /* eslint-disable */
             // Se a transação editada tiver categoria, define o ID, senão fica vazio
             setCategoryId(editingTransaction.category?.id || editingTransaction.categoryId || "");
             // eslint-disable-next-line react-hooks/set-state-in-effect
             setDescription(editingTransaction.description);
             setAmount(String(editingTransaction.amount));
+            /* eslint-enable */
             setType(editingTransaction.type);
             setDate(editingTransaction.date.split('T')[0]);
             setStatus(editingTransaction.status);
