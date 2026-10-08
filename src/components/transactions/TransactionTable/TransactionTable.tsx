@@ -39,6 +39,7 @@ export function TransactionTable({ transactions, isLoading, onEdit, onDelete}: T
                         <tr>
                             <th className="px-6 py-4 font-medium">Data</th>
                             <th className="px-6 py-4 font-medium">Descrição</th>
+                            <th className="px-6 py-4 font-medium">Categoria</th>
                             <th className="px-6 py-4 font-medium">Situação</th>
                             <th className="px-6 py-4 text-right font-medium">Valor</th>
                             <th className="px-6 py-4 text-right font-medium">Ações</th>
@@ -52,6 +53,10 @@ export function TransactionTable({ transactions, isLoading, onEdit, onDelete}: T
                             // Converte a data ISO para o formato brasileiro (DD/MM?YYYY)
                             // Como salvamos com T12:00:00Z, o getUTCDate garante que o dia não mude por caso do fuso horário
                             const formattedDate = formatDateBR(transaction.date);
+
+                            // Extrai a categoria do objeto aninhado que o backend envia
+                            const categoryName = transaction.category?.name;
+                            const categoryColor = transaction.category?.color || "#9CA3AF";
 
                             return (
                                 <tr key={transaction.id} className="hover:bg-gray-50 transition-colors">
@@ -78,6 +83,23 @@ export function TransactionTable({ transactions, isLoading, onEdit, onDelete}: T
                                                 </span>
                                             )}
                                         </div>
+                                    </td>
+
+                                    <td className="px-6 py-4 whitespace-nowrap">
+                                        {categoryName ? (
+                                            <div className="inline-flex items-center gap-2 rounded-full border border-gray-200 bg-white px-2.5 py-1 shadow-sm">
+                                                <span
+                                                    className="h-2.5 w-2.5 rounded-full"
+                                                    style={{backgroundColor: categoryColor}}
+                                                />
+                                                <span className="text-sm font-medium text-gray-700">
+                                                    {categoryName}
+                                                </span>
+
+                                            </div>
+                                        ):(
+                                            <span className="text-xs text-gray-400 italic">Sem Categoria</span>
+                                        )}
                                     </td>
 
                                     <td className="px-6 py-4">
