@@ -44,6 +44,8 @@ export function CategoryManager({ isOpen, onClose }: CategoryManagerProps) {
             }
             setName('');
             setColor(PREDEFINED_COLORS[6]); // reseta para azul padrão
+
+            window.dispatchEvent(new Event('categoriesUpdated')); // Notifica outros componentes sobre a atualização
         } catch (err) {
             // O hook já seta a mensagem de erro no estado, mas o catch evita 
             // que a aplicação quebre silenciosamente caso a promessa seja rejeitada
