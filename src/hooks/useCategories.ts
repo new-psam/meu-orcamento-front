@@ -50,6 +50,8 @@ export function useCategories() {
         try{
             await CategoryService.delete(id);
             setCategories(prev=> prev.filter(cat => cat.id !== id));
+            window.dispatchEvent(new Event('categoriesUpdated')); // Notifica outros componentes sobre a atualização
+        
         } catch (err) {
             setError('Erro ao remover categoria.');
             throw err;
@@ -59,6 +61,18 @@ export function useCategories() {
     useEffect(() => {
         // eslint-disable-next-line react-hooks/set-state-in-effect
         loadCategories();
+        // 🎧 Cria o ouvinte para o nosso evento customizado
+        const handleUpdated = () => {
+            loadCategories(); // Busca no bando ce dados novamente quando o evento é disparado
+        };
+        // Inscreve o hook para ouvir o evento customizado
+        window.addEventListener('categoriesUpdated', handleUpdated);
+
+        // Limpeza (Cleanup) do ouvinte quando o componente que usa o hook é desmontado
+        // para evitar vazamentos de memória e múltiplas inscrições do mesmo evento
+        return () => {
+            window.removeEventListener('categoriesUpdated', handleUpdated);
+        };
     }, [loadCategories]);
 
     return { 
